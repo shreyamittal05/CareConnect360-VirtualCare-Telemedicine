@@ -6,6 +6,12 @@ class PatientProfileInline(admin.StackedInline):
     model = PatientProfile
     can_delete = False
 
+
+class DoctorProfileInline(admin.StackedInline):
+    model = DoctorProfile
+    can_delete = False
+
+
 class PrescriptionItemInline(admin.TabularInline):
     model = PrescriptionItem
     extra = 1
@@ -16,7 +22,7 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ("role", "is_active")
     search_fields = ("username", "email", "first_name", "last_name")
     fieldsets = UserAdmin.fieldsets + (("CareConnect Role", {"fields": ("role", "phone", "date_of_birth")}),)
-    inlines = [PatientProfileInline]
+    inlines = [PatientProfileInline, DoctorProfileInline]
 
 @admin.register(Appointment)
 class AppointmentAdmin(admin.ModelAdmin):
