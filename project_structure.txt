@@ -1,0 +1,25 @@
+virtualcare/
+├── manage.py
+├── requirements.txt
+├── README.md
+├── db.sqlite3 (created by migrations)
+├── virtualcare/
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+├── core/
+│   ├── models.py
+│   ├── forms.py
+│   ├── views.py
+│   ├── urls.py
+│   ├── admin.py
+│   ├── management/commands/seed_data.py
+│   └── templates/core/
+│       ├── base.html
+│       ├── login.html, register.html
+│       ├── dashboard_patient.html, dashboard_doctor.html
+│       ├── doctors.html, booking.html
+│       ├── video_room.html, prescription_form.html
+│       ├── checkout.html, invoice.html
+└── static/css/

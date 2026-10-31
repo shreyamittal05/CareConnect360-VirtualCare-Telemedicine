@@ -1,0 +1,38 @@
+{% extends 'core/base.html' %}
+{% block title %}Secure Consultation | CareConnect360{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div><span class="badge bg-success mb-1"><i class="fa-solid fa-lock me-1"></i>Secure private room</span><h3 class="mb-0">Virtual Consultation #{{ appointment.pk }}</h3></div>
+  {% if user.role == 'DOCTOR' %}<a href="{% url 'consultation' appointment.pk %}" class="btn btn-outline-primary"><i class="fa-solid fa-file-prescription me-1"></i>Full prescription workspace</a>{% endif %}
+</div>
+<div class="row g-3">
+  <div class="{% if user.role == 'DOCTOR' %}col-xl-8{% else %}col-12{% endif %}">
+    {% if user.role == 'PATIENT' %}<div class="alert alert-light border"><strong>Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}</strong><span class="badge bg-info ms-2">{{ appointment.doctor.doctor_profile.specialization }}</span></div>{% endif %}
+    <div class="card overflow-hidden"><div id="jitsi-meet" style="height:68vh;min-height:430px"></div></div>
+    {% if user.role == 'PATIENT' %}<div class="text-center mt-3"><button id="end-call" class="btn btn-outline-danger"><i class="fa-solid fa-phone-slash me-1"></i>End & View Prescriptions</button></div>{% endif %}
+  </div>
+  {% if user.role == 'DOCTOR' %}
+  <div class="col-xl-4">
+    <div class="card p-3 mb-3"><h5><i class="fa-solid fa-notes-medical text-danger me-2"></i>Patient medical summary</h5><hr><dl class="row mb-0"><dt class="col-4">Patient</dt><dd class="col-8">{{ appointment.patient.get_full_name|default:appointment.patient.username }}</dd><dt class="col-4">Blood group</dt><dd class="col-8">{{ patient_profile.blood_group|default:"Not recorded" }}</dd><dt class="col-4">DOB</dt><dd class="col-8">{{ patient_profile.dob|date:"d M Y"|default:"Not recorded" }}</dd><dt class="col-4">Allergies</dt><dd class="col-8 text-danger">{{ patient_profile.allergies|default:"None recorded" }}</dd><dt class="col-4">History</dt><dd class="col-8">{{ patient_profile.medical_history|default:"None recorded" }}</dd></dl></div>
+    <div class="card p-3"><h5>Quick clinical diagnosis</h5><form method="post" action="{% url 'submit_prescription' appointment.pk %}" id="quick-prescription">{% csrf_token %}
+      <div class="mb-2"><label class="form-label">Diagnosis *</label><textarea name="diagnosis" class="form-control" rows="2" required>{{ prescription.diagnosis }}</textarea></div>
+      <div class="mb-2"><label class="form-label">Doctor notes</label><textarea name="doctor_notes" class="form-control" rows="2">{{ prescription.doctor_notes }}</textarea></div>
+      <div class="mb-2"><label class="form-label">Follow-up date</label><input type="date" name="follow_up_date" class="form-control" value="{{ prescription.follow_up_date|date:'Y-m-d' }}"></div>
+      <div class="d-flex justify-content-between align-items-center"><label class="form-label mb-0">Medicines</label><button type="button" class="btn btn-sm btn-outline-primary" onclick="addMedicine()">+ Add</button></div>
+      <div id="medicine-list" class="mt-2"><div class="medicine-row border rounded p-2 mb-2"><input name="medicine_name[]" class="form-control form-control-sm mb-1" placeholder="Medicine" value="{{ prescription.items.all.0.medicine_name }}"><div class="row g-1"><div class="col"><input name="dosage[]" class="form-control form-control-sm" placeholder="Dosage" value="{{ prescription.items.all.0.dosage }}"></div><div class="col"><input name="frequency[]" class="form-control form-control-sm" placeholder="Frequency" value="{{ prescription.items.all.0.frequency }}"></div><div class="col"><input name="duration[]" class="form-control form-control-sm" placeholder="Duration" value="{{ prescription.items.all.0.duration }}"></div></div></div></div>
+      <button class="btn btn-care w-100 mt-2"><i class="fa-solid fa-check me-1"></i>Submit Prescription</button>
+    </form></div>
+  </div>{% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://{{ jitsi_domain }}/external_api.js"></script>
+<script>
+const domain='{{ jitsi_domain|escapejs }}';
+const options={roomName:'{{ room_name|escapejs }}',width:'100%',height:'100%',parentNode:document.getElementById('jitsi-meet'),userInfo:{displayName:'{{ display_name|escapejs }}',email:'{{ user.email|escapejs }}'},configOverwrite:{prejoinPageEnabled:true,startWithAudioMuted:true,startWithVideoMuted:false,disableDeepLinking:true},interfaceConfigOverwrite:{SHOW_JITSI_WATERMARK:false,SHOW_WATERMARK_FOR_GUESTS:false,DEFAULT_BACKGROUND:'#123b5d'}};
+const api=new JitsiMeetExternalAPI(domain,options);
+api.addListener('videoConferenceJoined',()=>api.executeCommand('subject','CareConnect360 Consultation #{{ appointment.pk }}'));
+window.addEventListener('beforeunload',()=>api.dispose());
+{% if user.role == 'PATIENT' %}document.getElementById('end-call').addEventListener('click',()=>{api.executeCommand('hangup');window.location='{% url 'patient_dashboard' %}';});{% endif %}
+{% if user.role == 'DOCTOR' %}function addMedicine(){const row=document.createElement('div');row.className='medicine-row border rounded p-2 mb-2';row.innerHTML='<button type="button" class="btn-close float-end" onclick="this.parentElement.remove()"></button><input name="medicine_name[]" class="form-control form-control-sm mb-1" placeholder="Medicine"><div class="row g-1"><div class="col"><input name="dosage[]" class="form-control form-control-sm" placeholder="Dosage"></div><div class="col"><input name="frequency[]" class="form-control form-control-sm" placeholder="Frequency"></div><div class="col"><input name="duration[]" class="form-control form-control-sm" placeholder="Duration"></div></div>';document.getElementById('medicine-list').appendChild(row);}{% endif %}
+</script>{% endblock %}

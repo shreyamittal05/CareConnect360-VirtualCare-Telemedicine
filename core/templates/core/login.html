@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+{% block title %}Login | CareConnect360{% endblock %}
+{% block content %}
+<div class="row justify-content-center g-4">
+  <div class="col-md-6 col-lg-5">
+    <div class="card p-4 shadow-sm h-100">
+      <h3 class="mb-3"><i class="fa-solid fa-shield-halved text-info me-2"></i>Secure Login</h3>
+      <p class="text-muted">Sign in as Patient or Doctor.</p>
+      <form method="post" class="mt-3">{% csrf_token %}
+        <div class="mb-3"><label class="form-label">Username</label><input class="form-control" name="username" autocomplete="username" required></div>
+        <div class="mb-3"><label class="form-label">Password</label><input class="form-control" type="password" name="password" autocomplete="current-password" required></div>
+        {% if form.errors %}<div class="alert alert-danger">The username or password is incorrect.</div>{% endif %}
+        <button class="btn btn-care w-100">Login</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-4">
+    <div class="card p-4 bg-light h-100 d-flex flex-column justify-content-center">
+      <div class="text-center mb-3"><i class="fa-solid fa-user-plus fa-3x text-info"></i></div>
+      <h4 class="text-center">New Patient?</h4>
+      <p class="text-muted text-center">Create a free CareConnect360 account to find doctors and book virtual consultations.</p>
+      <a href="{% url 'register' %}" class="btn btn-outline-primary w-100"><i class="fa-solid fa-user-plus me-2"></i>Register as New Patient</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
