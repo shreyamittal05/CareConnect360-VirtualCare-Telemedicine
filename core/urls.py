@@ -1,10 +1,9 @@
-from django.contrib.auth.views import LoginView
 from django.urls import path
 from . import views
 
 urlpatterns = [
     path("", views.dashboard_redirect, name="home"),
-    path("login/", LoginView.as_view(template_name="core/login.html"), name="login"),
+    path("login/", views.login_view, name="login"),
     path("register/", views.register, name="register"),
     path("logout/", views.user_logout, name="logout"),
     path("dashboard/", views.dashboard_redirect, name="dashboard_redirect"),
@@ -15,6 +14,7 @@ urlpatterns = [
     path("appointments/<int:pk>/<str:action>/", views.update_appointment, name="update_appointment"),
     path("consultations/<int:pk>/room/", views.consultation_room, name="consultation_room"),
     path("consultations/room/<str:room_id>/", views.video_consultation_room, name="video_consultation_room"),
+    path("consultation/room/<str:room_id>/", views.video_consultation_room, name="consultation_room_secure"),
     path("appointments/<int:appointment_id>/prescription/submit/", views.submit_prescription, name="submit_prescription"),
     path("consultations/<int:pk>/workspace/", views.consultation, name="consultation"),
     path("prescriptions/<int:pk>/pdf/", views.prescription_pdf, name="prescription_pdf"),

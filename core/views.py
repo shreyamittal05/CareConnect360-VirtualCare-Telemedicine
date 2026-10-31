@@ -1,7 +1,7 @@
 import secrets
 from functools import wraps
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Q
@@ -35,6 +35,38 @@ def role_required(*roles):
     return decorator
 
 
+def doctor_required(view):
+    @wraps(view)
+    @login_required
+    def wrapped(request, *args, **kwargs):
+        if str(request.user.role).upper() != CustomUser.Role.DOCTOR and not request.user.is_superuser:
+            return HttpResponseForbidden("Doctor access required.")
+        return view(request, *args, **kwargs)
+    return wrapped
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard_redirect")
+
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        user = authenticate(request, username=username, password=password)
+        if user is not None and user.is_active:
+            login(request, user)
+            role = str(user.role).upper()
+            if role == CustomUser.Role.DOCTOR:
+                return redirect("doctor_dashboard")
+            if role == CustomUser.Role.PATIENT:
+                return redirect("patient_dashboard")
+            if role == CustomUser.Role.ADMIN or user.is_superuser:
+                return redirect("admin:index")
+            return redirect("dashboard_redirect")
+        messages.error(request, "The username or password is incorrect.")
+    return render(request, "core/login.html")
+
+
 def register(request):
     if request.user.is_authenticated:
         return redirect("dashboard_redirect")
@@ -65,7 +97,7 @@ def patient_dashboard(request):
     appointments = request.user.patient_appointments.select_related("doctor__doctor_profile", "invoice").order_by("-scheduled_at")
     return render(request, "core/dashboard_patient.html", {"appointments": appointments})
 
-@role_required("DOCTOR")
+@doctor_required
 def doctor_dashboard(request):
     """Doctor workspace: appointments are separated into today's/upcoming and completed work."""
     appointments = (request.user.doctor_appointments
@@ -163,7 +195,7 @@ def video_consultation_room(request, room_id):
         "prescription": prescription,
         "jitsi_domain": settings.JITSI_DOMAIN,
         "display_name": request.user.get_full_name() or request.user.username,
-        "room_name": room_id,
+        "room_name": f"CareConnect360_{room_id.replace('-', '_')}",
     })
 
 
